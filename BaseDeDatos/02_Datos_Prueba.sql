@@ -10,19 +10,22 @@
 -- 1. ESTUDIANTES (4 ACTIVOS y 1 SUSPENDIDO por 2 días según CUS02)
 -- -----------------------------------------------------------------------------
 INSERT INTO ESTUDIANTE (id_estudiante, nombres, apellidos, correo, estado_estudiante, fecha_fin_suspension)
-VALUES ('EST001', 'Carlos Alberto', 'Mendoza Ríos', 'carlos.mendoza@unmsm.edu.pe', 'ACTIVO', NULL);
+VALUES ('EST001', 'Angel Eduardo Daniel', 'Salazar Ruiz', 'angel.salazarr@unmsm.edu.pe', 'ACTIVO', NULL);
 
 INSERT INTO ESTUDIANTE (id_estudiante, nombres, apellidos, correo, estado_estudiante, fecha_fin_suspension)
-VALUES ('EST002', 'Lucía Fernanda', 'Paredes Soto', 'lucia.paredes@unmsm.edu.pe', 'ACTIVO', NULL);
+VALUES ('EST002', 'Miguel Angel', 'Villegas Torres', 'miguel.villegast@unmsm.edu.pe', 'ACTIVO', NULL);
 
 INSERT INTO ESTUDIANTE (id_estudiante, nombres, apellidos, correo, estado_estudiante, fecha_fin_suspension)
-VALUES ('EST003', 'Jorge Luis', 'Quispe Huamán', 'jorge.quispe@unmsm.edu.pe', 'ACTIVO', NULL);
+VALUES ('EST003', 'Alejandro', 'Sachahuaman Jaramillo', 'alejandro.sachahuamanj@unmsm.edu.pe', 'ACTIVO', NULL);
 
 INSERT INTO ESTUDIANTE (id_estudiante, nombres, apellidos, correo, estado_estudiante, fecha_fin_suspension)
-VALUES ('EST004', 'Valeria Sofía', 'Salazar Vargas', 'valeria.salazar@unmsm.edu.pe', 'ACTIVO', NULL);
+VALUES ('EST004', 'José David', 'Calla Chavez', 'jose.callac@unmsm.edu.pe', 'ACTIVO', NULL);
 
 INSERT INTO ESTUDIANTE (id_estudiante, nombres, apellidos, correo, estado_estudiante, fecha_fin_suspension)
-VALUES ('EST005', 'Diego Alejandro', 'Rojas Castillo', 'diego.rojas@unmsm.edu.pe', 'SUSPENDIDO', SYSDATE + 2);
+VALUES ('EST005', 'Italo Josué', 'Hurtado Flores', 'italo.hurtadof@unmsm.edu.pe', 'SUSPENDIDO', SYSDATE + 2);
+
+INSERT INTO ESTUDIANTE (id_estudiante, nombres, apellidos, correo, estado_estudiante, fecha_fin_suspension)
+VALUES ('EST005', 'Christopher', 'Saccaco Oscco', 'christopher.saccacoo@unmsm.edu.pe', 'SUSPENDIDO', SYSDATE + 2);
 
 -- -----------------------------------------------------------------------------
 -- 2. LIBROS CLÁSICOS DE INGENIERÍA DE SOFTWARE Y BASES DE DATOS
