@@ -9,13 +9,13 @@ import java.sql.Statement;
 
 /**
  * Clase utilitaria para gestionar la conexión a la base de datos Oracle
- * alojada en Docker (servicio FREEPDB1) mediante JDBC puro.
- * 
+ * alojada en Docker (servicio FREEPDB1) mediante JDBC thin puro (ojdbc17.jar).
+ *
  * @author Grupo 6
  */
 public final class ConexionBD {
 
-    /** URL de conexión JDBC para Oracle Database en contenedor Docker (FREEPDB1). */
+    /** URL de conexión JDBC thin para Oracle Database en contenedor Docker (FREEPDB1). */
     public static final String URL = "jdbc:oracle:thin:@localhost:1521/FREEPDB1";
 
     /** Usuario del esquema de la biblioteca en Oracle. */
@@ -32,7 +32,7 @@ public final class ConexionBD {
             Class.forName(DRIVER);
         } catch (ClassNotFoundException e) {
             System.err.println("[ADVERTENCIA] No se encontró el driver JDBC de Oracle (" + DRIVER + ") en el classpath. "
-                    + "Asegúrese de agregar ojdbc11.jar / ojdbc8.jar a las librerías del proyecto en NetBeans.");
+                    + "Asegúrese de vincular ojdbc17.jar desde las propiedades del proyecto en NetBeans (Libraries).");
         }
     }
 

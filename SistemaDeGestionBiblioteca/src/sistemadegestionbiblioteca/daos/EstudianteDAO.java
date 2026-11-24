@@ -52,6 +52,16 @@ public interface EstudianteDAO {
     boolean verificarYLevantarSuspensionVencida(String idEstudiante) throws SQLException;
 
     /**
+     * Permite al Administrador actualizar manualmente el estado de penalización de un estudiante.
+     *
+     * @param idEstudiante Código del estudiante.
+     * @param suspender    {@code true} para suspender por 2 días; {@code false} para reactivar a 'ACTIVO'.
+     * @return Mensaje con el resultado de la operación.
+     * @throws SQLException Si ocurre un error en la transacción JDBC.
+     */
+    String actualizarEstadoPenalizacion(String idEstudiante, boolean suspender) throws SQLException;
+
+    /**
      * Lista todos los estudiantes registrados en el sistema.
      *
      * @return Lista de estudiantes.

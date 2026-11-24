@@ -1,7 +1,8 @@
 -- =============================================================================
--- PROYECTO: Sistema de Gestión de Biblioteca (Grupo 6)
+-- PROYECTO: Sistema de Gestión de Biblioteca (Grupo 6 - UNMSM)
 -- MOTOR: Oracle Database (19c / 21c / 23ai - Servicio: FREEPDB1)
 -- ESQUEMA / USUARIO: biblioteca_grupo6
+-- CONTRASEÑA: biblioteca123
 -- ARCHIVO: 02_Datos_Prueba.sql
 -- DESCRIPCIÓN: Carga de datos iniciales de prueba para validar CUS01 a CUS05.
 -- =============================================================================
@@ -10,44 +11,43 @@
 -- 1. ESTUDIANTES (4 ACTIVOS y 1 SUSPENDIDO por 2 días según CUS02)
 -- -----------------------------------------------------------------------------
 INSERT INTO ESTUDIANTE (id_estudiante, nombres, apellidos, correo, estado_estudiante, fecha_fin_suspension)
-VALUES ('EST001', 'Angel Eduardo Daniel', 'Salazar Ruiz', 'angel.salazarr@unmsm.edu.pe', 'ACTIVO', NULL);
+VALUES ('EST001', 'Carlos Alberto', 'Mendoza Ríos', 'carlos.mendoza@unmsm.edu.pe', 'ACTIVO', NULL);
 
 INSERT INTO ESTUDIANTE (id_estudiante, nombres, apellidos, correo, estado_estudiante, fecha_fin_suspension)
-VALUES ('EST002', 'Miguel Angel', 'Villegas Torres', 'miguel.villegast@unmsm.edu.pe', 'ACTIVO', NULL);
+VALUES ('EST002', 'Lucía Fernanda', 'Paredes Soto', 'lucia.paredes@unmsm.edu.pe', 'ACTIVO', NULL);
 
 INSERT INTO ESTUDIANTE (id_estudiante, nombres, apellidos, correo, estado_estudiante, fecha_fin_suspension)
-VALUES ('EST003', 'Alejandro', 'Sachahuaman Jaramillo', 'alejandro.sachahuamanj@unmsm.edu.pe', 'ACTIVO', NULL);
+VALUES ('EST003', 'Jorge Luis', 'Quispe Huamán', 'jorge.quispe@unmsm.edu.pe', 'ACTIVO', NULL);
 
 INSERT INTO ESTUDIANTE (id_estudiante, nombres, apellidos, correo, estado_estudiante, fecha_fin_suspension)
-VALUES ('EST004', 'José David', 'Calla Chavez', 'jose.callac@unmsm.edu.pe', 'ACTIVO', NULL);
+VALUES ('EST004', 'Valeria Sofía', 'Salazar Vargas', 'valeria.salazar@unmsm.edu.pe', 'ACTIVO', NULL);
 
 INSERT INTO ESTUDIANTE (id_estudiante, nombres, apellidos, correo, estado_estudiante, fecha_fin_suspension)
-VALUES ('EST005', 'Italo Josué', 'Hurtado Flores', 'italo.hurtadof@unmsm.edu.pe', 'SUSPENDIDO', SYSDATE + 2);
-
-INSERT INTO ESTUDIANTE (id_estudiante, nombres, apellidos, correo, estado_estudiante, fecha_fin_suspension)
-VALUES ('EST005', 'Christopher', 'Saccaco Oscco', 'christopher.saccacoo@unmsm.edu.pe', 'SUSPENDIDO', SYSDATE + 2);
+VALUES ('EST005', 'Diego Alejandro', 'Rojas Castillo', 'diego.rojas@unmsm.edu.pe', 'SUSPENDIDO', SYSDATE + 2);
 
 -- -----------------------------------------------------------------------------
 -- 2. LIBROS CLÁSICOS DE INGENIERÍA DE SOFTWARE Y BASES DE DATOS
 -- -----------------------------------------------------------------------------
-INSERT INTO LIBRO (id_libro, isbn, titulo, autor, editorial, anio_publicacion)
-VALUES (1, '978-0201707106', 'The Rational Unified Process: An Introduction', 'Philippe Kruchten', 'Addison-Wesley', 2003);
+INSERT INTO LIBRO (isbn, titulo, autor, editorial, anio_publicacion)
+VALUES ('978-0201707106', 'The Rational Unified Process: An Introduction', 'Philippe Kruchten', 'Addison-Wesley', 2003);
 
-INSERT INTO LIBRO (id_libro, isbn, titulo, autor, editorial, anio_publicacion)
-VALUES (2, '978-0132350884', 'Clean Code: A Handbook of Agile Software Craftsmanship', 'Robert C. Martin', 'Prentice Hall', 2008);
+INSERT INTO LIBRO (isbn, titulo, autor, editorial, anio_publicacion)
+VALUES ('978-0132350884', 'Clean Code: A Handbook of Agile Software Craftsmanship', 'Robert C. Martin', 'Prentice Hall', 2008);
 
-INSERT INTO LIBRO (id_libro, isbn, titulo, autor, editorial, anio_publicacion)
-VALUES (3, '978-0133970777', 'Fundamentals of Database Systems', 'Ramez Elmasri, Shamkant B. Navathe', 'Pearson', 2015);
+INSERT INTO LIBRO (isbn, titulo, autor, editorial, anio_publicacion)
+VALUES ('978-0133970777', 'Fundamentals of Database Systems', 'Ramez Elmasri, Shamkant B. Navathe', 'Pearson', 2015);
 
-INSERT INTO LIBRO (id_libro, isbn, titulo, autor, editorial, anio_publicacion)
-VALUES (4, '978-0201633610', 'Design Patterns: Elements of Reusable Object-Oriented Software', 'Erich Gamma, Richard Helm, Ralph Johnson, John Vlissides', 'Addison-Wesley', 1994);
+INSERT INTO LIBRO (isbn, titulo, autor, editorial, anio_publicacion)
+VALUES ('978-0201633610', 'Design Patterns: Elements of Reusable Object-Oriented Software', 'Erich Gamma, Richard Helm, Ralph Johnson, John Vlissides', 'Addison-Wesley', 1994);
 
-INSERT INTO LIBRO (id_libro, isbn, titulo, autor, editorial, anio_publicacion)
-VALUES (5, '978-0133943030', 'Software Engineering', 'Ian Sommerville', 'Pearson', 2015);
+INSERT INTO LIBRO (isbn, titulo, autor, editorial, anio_publicacion)
+VALUES ('978-0133943030', 'Software Engineering', 'Ian Sommerville', 'Pearson', 2015);
 
 -- -----------------------------------------------------------------------------
 -- 3. EJEMPLARES FÍSICOS (EJM-001 a EJM-008)
--- Estados sincronizados con los préstamos y reservas de prueba
+-- Estados sincronizados con los préstamos de prueba
+-- Nota: El Libro 4 (Design Patterns) tiene su único ejemplar PRESTADO (0 disponibles)
+--       para probar inmediatamente el botón "Notificar al Administrador" en CUS03.
 -- -----------------------------------------------------------------------------
 -- Libro 1: RUP Kruchten (2 ejemplares: 1 disponible, 1 prestado)
 INSERT INTO EJEMPLAR (id_ejemplar, id_libro, codigo_inventario, estado_ejemplar, estado_fisico)
@@ -63,16 +63,16 @@ VALUES ('EJM-003', 2, 'INV-BIB-2026-003', 'DISPONIBLE', 'BUENO');
 INSERT INTO EJEMPLAR (id_ejemplar, id_libro, codigo_inventario, estado_ejemplar, estado_fisico)
 VALUES ('EJM-004', 2, 'INV-BIB-2026-004', 'PRESTADO', 'BUENO');
 
--- Libro 3: Fundamentals of Database Systems (2 ejemplares: 1 disponible, 1 reservado)
+-- Libro 3: Fundamentals of Database Systems (2 ejemplares disponibles)
 INSERT INTO EJEMPLAR (id_ejemplar, id_libro, codigo_inventario, estado_ejemplar, estado_fisico)
 VALUES ('EJM-005', 3, 'INV-BIB-2026-005', 'DISPONIBLE', 'BUENO');
 
 INSERT INTO EJEMPLAR (id_ejemplar, id_libro, codigo_inventario, estado_ejemplar, estado_fisico)
-VALUES ('EJM-006', 3, 'INV-BIB-2026-006', 'RESERVADO', 'BUENO');
+VALUES ('EJM-006', 3, 'INV-BIB-2026-006', 'DISPONIBLE', 'BUENO');
 
--- Libro 4: Design Patterns GoF (1 ejemplar disponible)
+-- Libro 4: Design Patterns GoF (1 ejemplar PRESTADO -> 0 disponibles para probar CUS03)
 INSERT INTO EJEMPLAR (id_ejemplar, id_libro, codigo_inventario, estado_ejemplar, estado_fisico)
-VALUES ('EJM-007', 4, 'INV-BIB-2026-007', 'DISPONIBLE', 'BUENO');
+VALUES ('EJM-007', 4, 'INV-BIB-2026-007', 'PRESTADO', 'BUENO');
 
 -- Libro 5: Software Engineering Sommerville (1 ejemplar disponible)
 INSERT INTO EJEMPLAR (id_ejemplar, id_libro, codigo_inventario, estado_ejemplar, estado_fisico)
@@ -118,7 +118,16 @@ INSERT INTO PRESTAMO (
     NULL, 'PRESENCIAL', 'N', 'ACTIVO'
 );
 
--- Caso 3: Préstamo histórico DEVUELTO con retraso que originó la suspensión de EST005
+-- Caso 3: Préstamo ACTIVO sobre el único ejemplar de Design Patterns (EST003 -> EJM-007)
+INSERT INTO PRESTAMO (
+    id_estudiante, id_ejemplar, fecha_prestamo, fecha_devolucion_esperada,
+    fecha_devolucion_real, canal, devuelto_danado, estado_prestamo
+) VALUES (
+    'EST003', 'EJM-007', SYSDATE - 1, SYSDATE + 6,
+    NULL, 'PRESENCIAL', 'N', 'ACTIVO'
+);
+
+-- Caso 4: Préstamo histórico DEVUELTO con retraso que originó la suspensión de EST005
 INSERT INTO PRESTAMO (
     id_estudiante, id_ejemplar, fecha_prestamo, fecha_devolucion_esperada,
     fecha_devolucion_real, canal, devuelto_danado, estado_prestamo
@@ -128,14 +137,13 @@ INSERT INTO PRESTAMO (
 );
 
 -- -----------------------------------------------------------------------------
--- 6. RESERVAS DE MATERIAL BIBLIOGRÁFICO (CUS03)
+-- 6. NOTIFICACIONES AL ADMINISTRADOR DE EJEMPLO (CUS03)
 -- -----------------------------------------------------------------------------
--- Reserva PENDIENTE de recojo dentro de las 24 horas (EST003 -> EJM-006)
-INSERT INTO RESERVA_MATERIAL (
-    id_estudiante, id_ejemplar, fecha_reserva, fecha_limite_recojo, estado_reserva
-) VALUES (
-    'EST003', 'EJM-006', SYSDATE - (2/24), SYSDATE + (22/24), 'PENDIENTE'
-);
+INSERT INTO NOTIFICACION_ADMIN (id_estudiante, texto_busqueda, fecha_solicitud, estado)
+VALUES ('EST003', 'Domain-Driven Design - Eric Evans (No existe en catálogo)', SYSDATE - (5/24), 'PENDIENTE');
+
+INSERT INTO NOTIFICACION_ADMIN (id_estudiante, texto_busqueda, fecha_solicitud, estado)
+VALUES ('EST001', 'Design Patterns: Elements of Reusable Object-Oriented Software (Sin stock disponible)', SYSDATE - (1/24), 'PENDIENTE');
 
 -- -----------------------------------------------------------------------------
 -- 7. RESERVAS DE CUBÍCULO (CUS05)

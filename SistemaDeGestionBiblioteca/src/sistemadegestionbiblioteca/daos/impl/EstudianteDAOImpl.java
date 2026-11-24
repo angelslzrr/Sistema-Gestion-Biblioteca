@@ -30,6 +30,11 @@ public class EstudianteDAOImpl implements EstudianteDAO {
             "SET estado_estudiante = 'SUSPENDIDO', fecha_fin_suspension = SYSDATE + 2 " +
             "WHERE id_estudiante = ?";
 
+    private static final String SQL_REACTIVAR_ESTUDIANTE =
+            "UPDATE ESTUDIANTE " +
+            "SET estado_estudiante = 'ACTIVO', fecha_fin_suspension = NULL " +
+            "WHERE id_estudiante = ?";
+
     private static final String SQL_LEVANTAR_SUSPENSION_VENCIDA =
             "UPDATE ESTUDIANTE " +
             "SET estado_estudiante = 'ACTIVO', fecha_fin_suspension = NULL " +
@@ -100,6 +105,8 @@ public class EstudianteDAOImpl implements EstudianteDAO {
         ResultSet rs = null;
         try {
             conn = ConexionBD.obtenerConexion();
+            conn.setAutoCommit(false);
+
             psUpdate = conn.prepareStatement(SQL_LEVANTAR_SUSPENSION_VENCIDA);
             psUpdate.setString(1, idEstudiante);
             psUpdate.executeUpdate();
@@ -107,16 +114,49 @@ public class EstudianteDAOImpl implements EstudianteDAO {
             psSelect = conn.prepareStatement(SQL_OBTENER_POR_ID);
             psSelect.setString(1, idEstudiante);
             rs = psSelect.executeQuery();
+            boolean activo = false;
             if (rs.next()) {
                 String estado = rs.getString("estado_estudiante");
-                return "ACTIVO".equalsIgnoreCase(estado);
+                activo = "ACTIVO".equalsIgnoreCase(estado);
             }
-            return false;
+            ConexionBD.commit(conn);
+            return activo;
+        } catch (SQLException ex) {
+            ConexionBD.rollback(conn);
+            throw ex;
         } finally {
             ConexionBD.cerrar(rs);
             ConexionBD.cerrar(psSelect);
             ConexionBD.cerrar(psUpdate);
             ConexionBD.cerrar(conn);
+        }
+    }
+
+    @Override
+    public String actualizarEstadoPenalizacion(String idEstudiante, boolean suspender) throws SQLException {
+        Connection conn = null;
+        PreparedStatement ps = null;
+        try {
+            conn = ConexionBD.obtenerConexion();
+            conn.setAutoCommit(false);
+
+            ps = conn.prepareStatement(suspender ? SQL_SUSPENDER_DOS_DIAS : SQL_REACTIVAR_ESTUDIANTE);
+            ps.setString(1, idEstudiante);
+            int filas = ps.executeUpdate();
+            if (filas == 0) {
+                ConexionBD.rollback(conn);
+                return "[VALIDACIÓN] No se encontró ningún estudiante con el código '" + idEstudiante + "'.";
+            }
+
+            ConexionBD.commit(conn);
+            return suspender
+                    ? "Se aplicó la suspensión de 2 días al estudiante '" + idEstudiante + "'."
+                    : "Se levantó la sanción y el estudiante '" + idEstudiante + "' ahora se encuentra ACTIVO.";
+        } catch (SQLException ex) {
+            ConexionBD.rollback(conn);
+            throw ex;
+        } finally {
+            ConexionBD.cerrarRecursos(null, ps, conn);
         }
     }
 

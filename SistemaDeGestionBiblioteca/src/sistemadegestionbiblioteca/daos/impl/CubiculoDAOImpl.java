@@ -14,7 +14,7 @@ import sistemadegestionbiblioteca.utils.ConexionBD;
 /**
  * Implementación JDBC puro de {@link CubiculoDAO} para CUS05 (Reserva de Cubículos en tiempo real).
  * Implementa bloqueo pesimista a nivel de fila ({@code SELECT ... FOR UPDATE}) en Oracle
- * para garantizar consistencia transaccional ante múltiples solicitudes concurrentes.
+ * con transacciones manuales para garantizar consistencia ante solicitudes concurrentes.
  *
  * @author Grupo 6
  */
@@ -30,7 +30,7 @@ public class CubiculoDAOImpl implements CubiculoDAO {
     @Override
     public String reservarCubiculoConBloqueoPesimista(String idCubiculo, String idEstudiante, int duracionHoras) throws SQLException {
         if (duracionHoras < 1 || duracionHoras > 2) {
-            return "[RECHAZADO - CUS05] La duración de la reserva debe ser de 1 o máximo 2 horas exactas.";
+            return "[RECHAZADO] La duración de la reserva debe ser de 1 o máximo 2 horas exactas.";
         }
 
         Connection conn = null;
@@ -50,18 +50,28 @@ public class CubiculoDAOImpl implements CubiculoDAO {
             // Iniciar transacción manual para sostener el bloqueo SELECT ... FOR UPDATE
             conn.setAutoCommit(false);
 
-            // 1. Validar que el estudiante exista y esté ACTIVO
+            // Liberar automáticamente cubículos cuyas reservas ya cumplieron su tiempo (fecha_hora_fin <= SYSDATE)
+            liberarReservasVencidasEnTransaccion(conn);
+
+            // 1. Validar que el estudiante exista y esté ACTIVO (levantando sanción si ya cumplió sus 2 días)
+            try (PreparedStatement psLevantar = conn.prepareStatement(
+                    "UPDATE ESTUDIANTE SET estado_estudiante = 'ACTIVO', fecha_fin_suspension = NULL " +
+                    "WHERE id_estudiante = ? AND estado_estudiante = 'SUSPENDIDO' AND fecha_fin_suspension <= SYSDATE")) {
+                psLevantar.setString(1, idEstudiante);
+                psLevantar.executeUpdate();
+            }
+
             psEst = conn.prepareStatement(
                     "SELECT estado_estudiante, fecha_fin_suspension FROM ESTUDIANTE WHERE id_estudiante = ?");
             psEst.setString(1, idEstudiante);
             rsEst = psEst.executeQuery();
             if (!rsEst.next()) {
                 ConexionBD.rollback(conn);
-                return "[ERROR - CUS05] El estudiante '" + idEstudiante + "' no existe.";
+                return "[ERROR] El estudiante '" + idEstudiante + "' no existe.";
             }
             if ("SUSPENDIDO".equalsIgnoreCase(rsEst.getString("estado_estudiante"))) {
                 ConexionBD.rollback(conn);
-                return "[RECHAZADO - CUS05] El estudiante '" + idEstudiante + "' está SUSPENDIDO y no puede reservar cubículos.";
+                return "[RECHAZADO] El estudiante '" + idEstudiante + "' está SUSPENDIDO y no puede reservar cubículos.";
             }
 
             // 2. Regla estricta CUS05: Máximo 1 reserva activa por día por estudiante
@@ -74,20 +84,20 @@ public class CubiculoDAOImpl implements CubiculoDAO {
             int reservasHoy = rsContDia.next() ? rsContDia.getInt(1) : 0;
             if (reservasHoy >= 1) {
                 ConexionBD.rollback(conn);
-                return "[RECHAZADO - CUS05] El estudiante '" + idEstudiante
+                return "[RECHAZADO] El estudiante '" + idEstudiante
                         + "' ya posee 1 reserva activa de cubículo el día de hoy (límite máximo: 1 por día).";
             }
 
             // 3. BLOQUEO PESIMISTA OBLIGATORIO A NIVEL DE FILA (SELECT ... FOR UPDATE)
-            // Si otro hilo intenta reservar el mismo cubículo en el mismo milisegundo,
-            // Oracle encolará la petición hasta que esta transacción haga COMMIT o ROLLBACK.
+            // Si dos hilos intentan reservar el mismo cubículo simultáneamente, Oracle encola
+            // la segunda transacción hasta que la primera confirme (COMMIT) o revierta (ROLLBACK).
             psLockCubiculo = conn.prepareStatement(SQL_SELECT_CUBICULO_FOR_UPDATE);
             psLockCubiculo.setString(1, idCubiculo);
             rsLockCubiculo = psLockCubiculo.executeQuery();
 
             if (!rsLockCubiculo.next()) {
                 ConexionBD.rollback(conn);
-                return "[ERROR - CUS05] El cubículo '" + idCubiculo + "' no existe.";
+                return "[ERROR] El cubículo '" + idCubiculo + "' no existe.";
             }
 
             String nombreCodigo = rsLockCubiculo.getString("nombre_codigo");
@@ -95,7 +105,7 @@ public class CubiculoDAOImpl implements CubiculoDAO {
 
             if (!"DISPONIBLE".equalsIgnoreCase(estadoCubiculo)) {
                 ConexionBD.rollback(conn);
-                return "[RECHAZADO - CUS05] El cubículo '" + idCubiculo + "' (" + nombreCodigo
+                return "[RECHAZADO] El cubículo '" + idCubiculo + "' (" + nombreCodigo
                         + ") no está disponible (estado actual: " + estadoCubiculo + ").";
             }
 
@@ -115,19 +125,19 @@ public class CubiculoDAOImpl implements CubiculoDAO {
             psInsReserva.executeUpdate();
 
             psFechas = conn.prepareStatement(
-                    "SELECT TO_CHAR(SYSDATE, 'HH24:MI:SS') AS h_ini, " +
-                    "TO_CHAR(SYSDATE + (? / 24), 'HH24:MI:SS') AS h_fin FROM DUAL");
+                    "SELECT TO_CHAR(SYSDATE, 'HH24:MI') AS h_ini, " +
+                    "TO_CHAR(SYSDATE + (? / 24), 'HH24:MI') AS h_fin FROM DUAL");
             psFechas.setInt(1, duracionHoras);
             rsFechas = psFechas.executeQuery();
             String horario = rsFechas.next()
                     ? (rsFechas.getString("h_ini") + " a " + rsFechas.getString("h_fin"))
                     : (duracionHoras + " hora(s)");
 
-            // 6. Confirmar transacción y liberar el lock FOR UPDATE en Oracle
+            // 6. Confirmar transacción y liberar el bloqueo FOR UPDATE en Oracle
             ConexionBD.commit(conn);
-            return "[ÉXITO - CUS05] Cubículo '" + idCubiculo + "' (" + nombreCodigo
-                    + ") pasa a 'RESERVADO' con bloqueo pesimista (SELECT ... FOR UPDATE). "
-                    + "Estudiante: '" + idEstudiante + "', Duración: " + duracionHoras + "h (" + horario + ").";
+            return "Cubículo '" + idCubiculo + "' (" + nombreCodigo + ") reservado con éxito.\n"
+                    + "Estudiante: '" + idEstudiante + "'\n"
+                    + "Duración asignada: " + duracionHoras + " hora(s) (" + horario + ").";
 
         } catch (SQLException ex) {
             ConexionBD.rollback(conn);
@@ -165,7 +175,7 @@ public class CubiculoDAOImpl implements CubiculoDAO {
 
             if (!rsLock.next()) {
                 ConexionBD.rollback(conn);
-                return "[ERROR - CUS05] El cubículo '" + idCubiculo + "' no existe.";
+                return "[ERROR] El cubículo '" + idCubiculo + "' no existe.";
             }
 
             psUpdRes = conn.prepareStatement(
@@ -180,7 +190,7 @@ public class CubiculoDAOImpl implements CubiculoDAO {
             psUpdCub.executeUpdate();
 
             ConexionBD.commit(conn);
-            return "[ÉXITO - CUS05] Cubículo '" + idCubiculo + "' liberado y actualizado a 'DISPONIBLE'.";
+            return "El cubículo '" + idCubiculo + "' ha sido liberado y se encuentra DISPONIBLE.";
         } catch (SQLException ex) {
             ConexionBD.rollback(conn);
             throw ex;
@@ -190,6 +200,21 @@ public class CubiculoDAOImpl implements CubiculoDAO {
             ConexionBD.cerrar(rsLock);
             ConexionBD.cerrar(psLock);
             ConexionBD.cerrar(conn);
+        }
+    }
+
+    private void liberarReservasVencidasEnTransaccion(Connection conn) throws SQLException {
+        try (PreparedStatement psLibCub = conn.prepareStatement(
+                "UPDATE CUBICULO SET estado_cubiculo = 'DISPONIBLE' " +
+                "WHERE estado_cubiculo = 'RESERVADO' AND id_cubiculo IN (" +
+                "  SELECT id_cubiculo FROM RESERVA_CUBICULO WHERE estado_reserva = 'ACTIVA' AND fecha_hora_fin <= SYSDATE" +
+                ")")) {
+            psLibCub.executeUpdate();
+        }
+        try (PreparedStatement psFinRes = conn.prepareStatement(
+                "UPDATE RESERVA_CUBICULO SET estado_reserva = 'FINALIZADA' " +
+                "WHERE estado_reserva = 'ACTIVA' AND fecha_hora_fin <= SYSDATE")) {
+            psFinRes.executeUpdate();
         }
     }
 
